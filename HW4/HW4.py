@@ -1,6 +1,5 @@
 from cv2 import cv2 as cv
 import numpy as np
-from matplotlib import pyplot as plt
 
 def Dilation(image_output,image,ker,ker_num): 
     for i in range(image.shape[0]):
@@ -19,12 +18,36 @@ def Erosion(image_output,image,ker,ker_num):
                     break
             if temp == True:
                 image_output[i,j] = 255
+
+def Hit_and_Miss(image_output,image,ker1,ker1_num,ker2,ker2_num):
+    img_1 = np.zeros(image.shape,dtype=np.uint8)
+    img_2 = np.zeros(image.shape,dtype=np.uint8)
+    img_3 = np.zeros(image.shape,dtype=np.uint8)
+
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            if image[i,j] == 255:
+                img_2[i,j] = 0
+            else:
+                img_2[i,j] = 255
+
+    Erosion(img_1,image,ker1,ker1_num)
+    Erosion(img_3,img_2,ker2,ker2_num)
+
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            if img_1[i,j] == img_3[i,j] and img_1[i,j]==255:
+                image_output[i,j] = 255
+            else:
+                image_output[i,j] = 0
+
                 
 img = cv.imread("lena.bmp",cv.IMREAD_GRAYSCALE)
 img_a = np.zeros(img.shape,dtype=np.uint8)
 img_b = np.zeros(img.shape,dtype=np.uint8)
 img_c = np.zeros(img.shape,dtype=np.uint8)
 img_d = np.zeros(img.shape,dtype=np.uint8)
+img_e = np.zeros(img.shape,dtype=np.uint8)
 
 for i in range(img.shape[0]):
     for j in range(img.shape[1]):
@@ -58,6 +81,16 @@ kernal[19,0],kernal[19,1] = 2,0
 kernal[20,0],kernal[20,1] = 2,1 
 #print(kernal)
 
+kernal_l_num = 3
+kernal_l = np.zeros((kernal_l_num,2),int)
+kernal_l2 = np.zeros((kernal_l_num,2),int)
+kernal_l[0,0],kernal_l[0,1] = 0,0 
+kernal_l[1,0],kernal_l[1,1] = 0,-1
+kernal_l[2,0],kernal_l[2,1] = 1,0 
+kernal_l2[0,0],kernal_l2[0,1] = -1,0 
+kernal_l2[1,0],kernal_l2[1,1] = -1,1
+kernal_l2[2,0],kernal_l2[2,1] = 0,1 
+
 print("Start Dilation")
 Dilation(img_a,img,kernal,kernal_num)
 print("Start Erosion")
@@ -67,10 +100,14 @@ Dilation(img_c,img_b,kernal,kernal_num)
 print("Start Closing")
 Erosion(img_d,img_a,kernal,kernal_num)
 
+print("Start HitandMiss")
+Hit_and_Miss(img_e,img,kernal_l,kernal_l_num,kernal_l2,kernal_l_num)
+
 
 cv.imshow("binarize",img)
 cv.imshow("Dilation",img_a)
 cv.imshow("Erosion",img_b)
 cv.imshow("Opening",img_c)
 cv.imshow("Closing",img_d)
+cv.imshow("Hit-and-Miss",img_e)
 cv.waitKey(0)
